@@ -1,13 +1,15 @@
 name: Build RootEncoder APK
 
+# Sirf manual click se chalega – auto nahi
 on:
-  workflow_dispatch:  # Sirf manual "Run workflow" se chalega
+  workflow_dispatch:
 
+# Push aur tag permission (403 error fix)
 permissions:
   contents: write
 
 jobs:
-  build:
+  build-apk:
     runs-on: ubuntu-latest
 
     steps:
@@ -29,13 +31,16 @@ jobs:
       - name: Build Debug APK
         run: ./gradlew assembleDebug
 
-      - name: Upload APK as Artifact
+      - name: Upload APK as Artifact (Main Result)
         uses: actions/upload-artifact@v4
         with:
           name: RootEncoder-APK
           path: app/build/outputs/apk/debug/app-debug.apk
 
-      - name: Upload APK to Releases (Optional)
+      - name: Optional - Create Tag (Safe with Git Config)
         run: |
-          git tag -a "v1.0-$(date +'%Y%m%d')" -m "Auto build APK"
-          git push origin --tags
+          git config --global user.name "GitHub Action"
+          git config --global user.email "actions@github.com"
+          TAG_NAME="v1.0-$(date +'%Y%m%d')"
+          git tag -a $TAG_NAME -m "Auto built APK on $(date)"
+          git push origin $TAG_NAME || echo "Tag already exists or push skipped"
